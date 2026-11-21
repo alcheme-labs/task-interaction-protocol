@@ -173,3 +173,7 @@ node replay.mjs "$scratch/registered.json" "$samples/conformance.json"
 The local registry persists definitions. Replay instances run in memory and receive fixture identities and events. To verify a host integration, repeat the applicable cases through its authenticated operations and durable store, including revoked access, restart, a lost acknowledgement after an external commit, and two signals racing to consume one wait. [Host acceptance cases T01–T41](docs/protocol-and-runtime-boundaries.md#tests)
 
 Maintain both language editions, their shared case IDs and the integration Skill in the same change when protocol behavior changes. Both editions share the schemas and replay tools. Keep the localized examples aligned on case names, event order and expected outcomes. For a diagram change, update both labels in the interactive HTML and export its English `?view=poster` as a full-page PNG.
+
+## License
+
+This repository is licensed under the [Apache License 2.0](LICENSE).
