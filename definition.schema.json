@@ -1,0 +1,373 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task definition interchange format 1.0 / 任务定义交换格式 1.0",
+  "description": "A definition exchanged by external authors and host publishers. It declares the activities, waits, handoff rules and method references.\n\n面向外部编排方与宿主发布方的定义数据。活动、等待、交接规则与方法引用均在该对象内声明。",
+  "$comment": "This schema validates document shape and the mapping roots allowed at each position. The publisher also checks named references, catalog and source capabilities, field paths and types, required port coverage, rule order and the rework baseline. The host manages instances, published revisions, real principals and credentials.\n\n本模式验证文档形状与各位置允许的映射根。发布方另须核验命名引用、目录与来源能力、字段路径与类型、必填端口覆盖、规则顺序及退回依据。工作实例、发布修订、实际主体和凭据由宿主分别管理。",
+  "type": "object",
+  "required": ["protocolVersion", "taskId", "goal", "roles", "start", "activities"],
+  "properties": {
+    "protocolVersion": {"const": "1.0"},
+    "taskId": {"$ref": "#/$defs/nonBlank"},
+    "goal": {"$ref": "#/$defs/nonBlank"},
+    "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "distinctRoles": {
+      "description": "The two roles in each pair must bind to different principals. An omitted or empty list allows shared principals. The publisher checks that both roles are declared and rejects duplicate unordered pairs.\n\n每对角色必须绑定不同主体。省略或传空数组时，共用主体是允许的。发布方核验两个角色均已声明，并按无序对检查重复。",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "uniqueItems": true,
+        "items": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "sources": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "start": {"$ref": "#/$defs/start"},
+    "activities": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"$ref": "#/$defs/activity"}
+    },
+    "waits": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"$ref": "#/$defs/wait"}
+    },
+    "after": {"$ref": "#/$defs/after"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "identifier": {
+      "description": "Identifier for a port, activity, role, source, wait, check or variant. It can contain ASCII letters, supported Han characters, digits, underscores and hyphens. Start with a letter, a supported Han character or an underscore.\n\n用于端口、活动、角色、来源、等待、检查与变体的标识。允许英文、汉字、数字、下划线和连字符，首字符须为字母、汉字或下划线。",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)(?![\\s\\S])"
+    },
+    "nonBlank": {"type": "string", "pattern": "\\S"},
+    "methodRef": {
+      "description": "Fixed-version method catalog reference such as checkArtifact@1. At publication the host must resolve an immutable version for this reference and purpose.\n\n方法目录中固定版本的引用，例如 checkArtifact@1。发布时须能按此引用及用途解析不可变版本。",
+      "type": "string",
+      "pattern": "^(?:[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*(?:[./][A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)*@[A-Za-z0-9][A-Za-z0-9._+\\-]*)(?![\\s\\S])"
+    },
+    "portType": {"enum": ["text", "bool", "ref", "resultId", "factId"]},
+    "inputPorts": {
+      "description": "A trailing question mark marks an optional input. The publisher must also reject an input declared as both required and optional.\n\n键后的问号声明可选输入。发布方还须拒绝同一名称同时出现必填及可选两种声明。",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^(?:[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*\\??)(?![\\s\\S])"
+      },
+      "additionalProperties": {"$ref": "#/$defs/portType"}
+    },
+    "fields": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"$ref": "#/$defs/portType"}
+    },
+    "variantFields": {"$ref": "#/$defs/fields", "propertyNames": {"not": {"const": "kind"}}},
+    "outputShape": {
+      "description": "Declare output fields directly, or use the reserved variants key to declare alternatives. The selected variant name is the runtime kind.\n\n直接声明一组输出字段，或用保留键 variants 声明变体。变体名称即运行时 kind 的值。",
+      "oneOf": [
+        {"$ref": "#/$defs/fields", "propertyNames": {"not": {"const": "variants"}}},
+        {
+          "type": "object",
+          "required": ["variants"],
+          "properties": {
+            "variants": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {"$ref": "#/$defs/identifier"},
+              "additionalProperties": {"$ref": "#/$defs/variantFields"}
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "fieldPath": {
+      "type": "string",
+      "pattern": "^(?:[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)*)(?![\\s\\S])"
+    },
+    "scalar": {"type": ["null", "boolean", "number", "string"]},
+    "literal": {
+      "type": "object",
+      "required": ["const"],
+      "properties": {"const": {"$ref": "#/$defs/scalar"}},
+      "additionalProperties": false
+    },
+    "valueLiteral": {
+      "description": "Wrap string literals in {\"const\":\"...\"} in mappings. Booleans, numbers and null may also appear directly.\n\n映射中的字符串字面量须写成 {\"const\":\"...\"}，布尔、数字和 null 也允许直接表示。",
+      "oneOf": [{"$ref": "#/$defs/literal"}, {"type": ["null", "boolean", "number"]}]
+    },
+    "startPath": {
+      "type": "string",
+      "pattern": "^(?:(?:start)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+)(?![\\s\\S])"
+    },
+    "inputPath": {
+      "type": "string",
+      "pattern": "^(?:(?:in)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+)(?![\\s\\S])"
+    },
+    "checkPath": {
+      "type": "string",
+      "pattern": "^(?:(?:in|out)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+)(?![\\s\\S])"
+    },
+    "requestPath": {
+      "type": "string",
+      "pattern": "^(?:(?:in|out)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+|result)(?![\\s\\S])"
+    },
+    "exitPath": {
+      "type": "string",
+      "pattern": "^(?:(?:start|in|out)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+|result)(?![\\s\\S])"
+    },
+    "resumePath": {
+      "type": "string",
+      "pattern": "^(?:(?:start|in|out|fact)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+|result|factId)(?![\\s\\S])"
+    },
+    "factPath": {
+      "type": "string",
+      "pattern": "^(?:(?:fact)(?:\\.[A-Za-z_\\u3400-\\u9fff][A-Za-z0-9_\\u3400-\\u9fff-]*)+|factId)(?![\\s\\S])"
+    },
+    "startMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/startPath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "inputMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/inputPath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "checkMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/checkPath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "requestMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/requestPath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "exitMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/exitPath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "resumeMap": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"oneOf": [{"$ref": "#/$defs/resumePath"}, {"$ref": "#/$defs/valueLiteral"}]}
+    },
+    "comparisonLiteral": {"oneOf": [{"$ref": "#/$defs/scalar"}, {"$ref": "#/$defs/literal"}]},
+    "routeCondition": {
+      "type": "array",
+      "minItems": 3,
+      "prefixItems": [{"$ref": "#/$defs/exitPath"}, {"const": "eq"}, {"$ref": "#/$defs/comparisonLiteral"}],
+      "items": false
+    },
+    "waitCondition": {
+      "type": "array",
+      "minItems": 3,
+      "prefixItems": [{"$ref": "#/$defs/factPath"}, {"const": "eq"}, {"$ref": "#/$defs/comparisonLiteral"}],
+      "items": false
+    },
+    "start": {
+      "type": "object",
+      "required": ["input", "activity"],
+      "properties": {
+        "input": {"$ref": "#/$defs/inputPorts"},
+        "activity": {"$ref": "#/$defs/identifier"},
+        "with": {"$ref": "#/$defs/startMap"}
+      },
+      "additionalProperties": false
+    },
+    "executeWith": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {"method": {"$ref": "#/$defs/methodRef"}, "with": {"$ref": "#/$defs/inputMap"}},
+      "additionalProperties": false
+    },
+    "execution": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {"kind": {"const": "rule"}, "instructions": {"$ref": "#/$defs/nonBlank"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "executeWith"],
+          "properties": {
+            "kind": {"const": "method"},
+            "executeWith": {"$ref": "#/$defs/executeWith"},
+            "instructions": {"$ref": "#/$defs/nonBlank"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "required": ["id", "method", "mode"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "method": {"$ref": "#/$defs/methodRef"},
+        "mode": {"enum": ["sync", "async"]},
+        "criterion": {"$ref": "#/$defs/nonBlank"},
+        "with": {"$ref": "#/$defs/checkMap"},
+        "provesUse": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/fieldPath"}}
+      },
+      "additionalProperties": false
+    },
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+    "returnExit": {
+      "type": "object",
+      "required": ["return", "base", "edit", "reason"],
+      "properties": {
+        "return": {"$ref": "#/$defs/identifier"},
+        "base": {"$ref": "#/$defs/inputPath"},
+        "edit": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/fieldPath"}},
+        "reason": {"$ref": "#/$defs/exitPath"}
+      },
+      "additionalProperties": false
+    },
+    "exit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["next"],
+          "properties": {"next": {"$ref": "#/$defs/identifier"}, "with": {"$ref": "#/$defs/exitMap"}},
+          "additionalProperties": false
+        },
+        {"$ref": "#/$defs/returnExit"},
+        {
+          "type": "object",
+          "required": ["wait"],
+          "properties": {"wait": {"$ref": "#/$defs/identifier"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["end"],
+          "properties": {"end": {"$ref": "#/$defs/exitPath"}},
+          "additionalProperties": false
+        }
+      ]
+    },
+    "resume": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["next"],
+          "properties": {"next": {"$ref": "#/$defs/identifier"}, "with": {"$ref": "#/$defs/resumeMap"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["end"],
+          "properties": {"end": {"$ref": "#/$defs/resumePath"}},
+          "additionalProperties": false
+        }
+      ]
+    },
+    "route": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["when", "exit"],
+          "properties": {"when": {"$ref": "#/$defs/routeCondition"}, "exit": {"$ref": "#/$defs/exit"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["default"],
+          "properties": {"default": {"$ref": "#/$defs/exit"}},
+          "additionalProperties": false
+        }
+      ]
+    },
+    "routes": {
+      "description": "Exactly one default exit is required. The publisher also checks that it appears last.\n\n必须恰有一个默认出口。发布时额外检查默认出口位于末尾。",
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/route"},
+      "contains": {"type": "object", "required": ["default"]},
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "resourceMode": {"enum": ["readVersion", "readLive", "edit", "replace"]},
+    "activityResourceUses": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["target", "mode"],
+        "properties": {"target": {"$ref": "#/$defs/inputPath"}, "mode": {"$ref": "#/$defs/resourceMode"}},
+        "additionalProperties": false
+      }
+    },
+    "waitResourceUses": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["target", "mode"],
+        "properties": {"target": {"$ref": "#/$defs/requestPath"}, "mode": {"$ref": "#/$defs/resourceMode"}},
+        "additionalProperties": false
+      }
+    },
+    "activity": {
+      "type": "object",
+      "required": ["assignee", "goal", "execution", "input", "output", "routes"],
+      "properties": {
+        "assignee": {"$ref": "#/$defs/identifier"},
+        "goal": {"$ref": "#/$defs/nonBlank"},
+        "execution": {"$ref": "#/$defs/execution"},
+        "input": {"$ref": "#/$defs/inputPorts"},
+        "output": {"$ref": "#/$defs/outputShape"},
+        "checks": {"$ref": "#/$defs/checks"},
+        "routes": {"$ref": "#/$defs/routes"},
+        "resourceUses": {"$ref": "#/$defs/activityResourceUses"}
+      },
+      "additionalProperties": false,
+      "if": {
+        "required": ["checks"],
+        "properties": {"checks": {"type": "array", "contains": {"type": "object", "required": ["provesUse"]}}}
+      },
+      "then": {"properties": {"execution": {"properties": {"kind": {"const": "method"}}}}}
+    },
+    "wait": {
+      "type": "object",
+      "required": ["mode", "source", "subject", "semantics", "fact", "when", "resume"],
+      "properties": {
+        "mode": {"enum": ["request", "observe"]},
+        "source": {"$ref": "#/$defs/identifier"},
+        "subject": {"$ref": "#/$defs/exitPath"},
+        "semantics": {"enum": ["state", "event"]},
+        "fact": {"$ref": "#/$defs/fields"},
+        "when": {"$ref": "#/$defs/waitCondition"},
+        "resume": {"$ref": "#/$defs/resume"},
+        "method": {"$ref": "#/$defs/methodRef"},
+        "with": {"$ref": "#/$defs/requestMap"},
+        "resourceUses": {"$ref": "#/$defs/waitResourceUses"}
+      },
+      "additionalProperties": false,
+      "if": {"properties": {"mode": {"const": "request"}}},
+      "then": {"required": ["method"]},
+      "else": {
+        "not": {"anyOf": [{"required": ["method"]}, {"required": ["with"]}, {"required": ["resourceUses"]}]}
+      }
+    },
+    "after": {
+      "type": "object",
+      "properties": {
+        "work.accepted": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/methodRef"}},
+        "wait.opened": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/methodRef"}},
+        "wait.resumed": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/methodRef"}},
+        "instance.completed": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/methodRef"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

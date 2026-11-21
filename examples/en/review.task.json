@@ -1,0 +1,44 @@
+{
+  "protocolVersion": "1.0",
+  "taskId": "review-note",
+  "goal": "Deliver a conclusion based on the brief and approved by the reviewer.",
+  "roles": ["writer", "reviewer"],
+  "sources": ["confirmation"],
+  "start": {
+    "input": {"brief": "text", "caseKey": "text"},
+    "activity": "draft",
+    "with": {"brief": "start.brief", "caseKey": "start.caseKey"}
+  },
+  "activities": {
+    "draft": {
+      "assignee": "writer",
+      "goal": "Write a conclusion from the brief and indicate whether it needs external confirmation.",
+      "execution": {"kind": "rule"},
+      "input": {"brief": "text", "caseKey": "text"},
+      "output": {"summary": "text", "confirm": "bool"},
+      "routes": [
+        {"when": ["out.confirm", "eq", true], "exit": {"wait": "confirmation"}},
+        {"default": {"next": "review", "with": {"item": "result"}}}
+      ]
+    },
+    "review": {
+      "assignee": "reviewer",
+      "goal": "Review this conclusion. Approve it or specify what needs to change.",
+      "execution": {"kind": "rule"},
+      "input": {"item": "resultId", "evidence?": "factId"},
+      "output": {"variants": {"revise": {"reason": "text"}, "approve": {}}},
+      "routes": [
+        {"when": ["out.kind", "eq", "revise"], "exit": {"return": "draft", "base": "in.item", "edit": ["summary", "confirm"], "reason": "out.reason"}},
+        {"default": {"end": "in.item"}}
+      ]
+    }
+  },
+  "waits": {
+    "confirmation": {
+      "mode": "observe", "semantics": "state", "source": "confirmation",
+      "subject": "in.caseKey", "fact": {"ready": "bool"},
+      "when": ["fact.ready", "eq", true],
+      "resume": {"next": "review", "with": {"item": "result", "evidence": "factId"}}
+    }
+  }
+}

@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23114d42'/%3E%3Cpath d='M8 10h8v12h8' stroke='%23bfe6ce' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<title data-zh="任务系统协议与运行边界 · 总图">Task protocol and runtime boundaries · Overview</title>
+<style>
+:root{color-scheme:light;--paper:#f0f5f1;--surface:#fffefa;--ink:#163b35;--soft:#425e56;--teal:#126859;--deep:#114d42;--mint:#e6f2e9;--wire:#468273;--line:#c5d6ca;--ice:#eff5fb;--blue:#345f88;--gold:#80531b;--gold-bg:#fff5df;--gold-wire:#a67536;--sans:"Instrument Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;--mono:"IBM Plex Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.48;-webkit-font-smoothing:antialiased}
+main{max-width:1280px;margin:0 auto;padding:25px 30px 34px}
+h1,h2,h3,h4,p,dl,dd,ul,ol{margin:0}
+button,select,input{font:inherit}
+code,.mono{font-family:var(--mono);font-size:.94em;font-variant-ligatures:none}
+figure{margin:0}
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:15px}
+h1{font-size:clamp(30px,3.4vw,44px);line-height:1.23;font-weight:720;letter-spacing:-.042em}
+.mast p{margin-top:7px;color:var(--soft);font-size:15px}
+.key{display:flex;align-items:center;flex-wrap:wrap;gap:5px 16px;margin:0 0 3px;list-style:none;padding:0}
+.key li{display:flex;align-items:center;gap:7px;white-space:nowrap;color:var(--soft);font-size:13px}
+.key i{width:25px;border-top:2px solid var(--wire);position:relative}
+.key i:after{content:"";position:absolute;right:0;top:-4px;width:5px;height:5px;border-top:2px solid var(--wire);border-right:2px solid var(--wire);transform:rotate(45deg)}
+.key .k-blue,.key .k-blue:after{border-color:var(--blue)}
+.key .k-gold,.key .k-gold:after{border-color:var(--gold-wire)}
+.key .k-gold{border-top-style:dashed}
+.panel{border:1px solid var(--line);border-radius:15px;background:var(--surface);margin:10px 0 0;padding:14px 19px 16px;box-shadow:0 2px 6px #23463605}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}
+.title{display:flex;align-items:baseline;gap:10px}
+.secno{border-left:3px solid #77a58d;padding-left:8px;font:600 14px var(--mono);color:var(--teal);letter-spacing:-.04em}
+h2{font-size:23px;line-height:1.22;letter-spacing:-.035em}
+.note{font-size:13px;color:var(--soft)}
+.flow{display:grid;align-items:stretch}
+.cols3{grid-template-columns:minmax(0,1fr) 58px minmax(0,1.07fr) 58px minmax(0,1.07fr)}
+.cols4{grid-template-columns:minmax(0,1.09fr) 34px minmax(0,1fr) 34px minmax(0,1.06fr) 34px minmax(0,1fr)}
+.card,.attach,.context-card,.route{min-width:0}
+.card{background:#f4f8f3;border:1px solid #bacfbf;border-radius:9px;padding:9px 13px}
+.card h3,.attach h4,.route h3,.context-card h3{font-size:18px;line-height:1.26;font-weight:680;letter-spacing:-.025em}
+.card h3 code,.attach h4 code,.route h3 code,.context-card h3 code{font-size:.91em}
+.card p,.attach p,.route p,.context-card p{font-size:14px;line-height:1.48;margin-top:2px}
+.who{margin-bottom:4px;color:var(--teal);font-size:12px;line-height:1.3;font-weight:620}
+.who code{font-size:1em;font-weight:550}
+.selected{background:#e6f2e9;border-color:#9dbdaa}
+.deep{color:#fff;background:var(--deep);border-color:var(--deep)}
+.deep .who{color:#c9e8d5}
+.deep .mute{color:#d3e9df}
+.mute{color:var(--soft)}
+.rail{position:relative;min-height:20px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--teal)}
+.rail b{position:relative;display:block;width:100%;height:0;border-top:1.7px solid var(--wire)}
+.rail b:after{content:"";position:absolute;right:2px;top:-4px;width:6px;height:6px;border-top:1.7px solid var(--wire);border-right:1.7px solid var(--wire);transform:rotate(45deg)}
+.rail small{position:absolute;bottom:calc(50% + 4px);font-size:11px;white-space:nowrap;font-weight:560;letter-spacing:0}
+.attach-grid{display:grid}
+.attach-col{position:relative;padding-top:15px;display:flex;align-items:stretch}
+.attach-col:nth-child(1){grid-column:1}
+.attach-col:nth-child(2){grid-column:3}
+.attach-col:nth-child(3){grid-column:5}
+.attach-col:before{content:"";position:absolute;top:0;left:22px;height:15px;border-left:1.7px solid var(--wire)}
+.attach-col:after{content:"";position:absolute;top:8px;left:19px;width:6px;height:6px;border-right:1.7px solid var(--wire);border-bottom:1.7px solid var(--wire);transform:rotate(45deg)}
+.attach-col.pre:before,.attach-col.pre:after{border-color:var(--blue)}
+.attach-col.post:before,.attach-col.post:after{border-color:var(--gold-wire)}
+.attach-col.post:before{border-left-style:dashed}
+.attach{width:100%;padding:8px 12px;border:1px solid #c8d6ca;border-radius:8px;background:#f5f7f2}
+.attach h4{font-size:15px}.attach p{font-size:13px}.pre .attach{background:var(--ice);color:#294f76;border-color:#aac1d6}.post .attach{background:var(--gold-bg);color:#714a1e;border:1px dashed var(--gold-wire)}
+.route-source{display:flex;align-items:center;justify-content:center;gap:9px}
+.route-source > span{border:1px solid #93b7a5;background:var(--mint);padding:3px 13px;border-radius:18px;font-size:13px;font-weight:620;text-align:center}
+.routes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;position:relative;padding-top:17px}
+.routes:before{content:"";position:absolute;top:8px;left:calc(12.5% - 4.5px);right:calc(12.5% - 4.5px);height:0;border-top:1.7px solid var(--wire)}
+.routes:after{content:"";position:absolute;top:0;left:50%;height:9px;border-left:1.7px solid var(--wire)}
+.route{border:1px solid #c3d2c6;border-top:2px solid #75a18e;padding:7px 12px 9px;border-radius:7px;background:#f7f9f4;position:relative}
+.route:before{content:"";position:absolute;bottom:100%;left:50%;height:10px;border-left:1.7px solid var(--wire)}
+.route h3{font-size:16px}.route h3 code{color:var(--teal);margin-right:6px}.route p{font-size:13px}
+.wait-flow .card{padding:9px 11px}.wait-flow .card h3{font-size:16px}.wait-flow .card p{font-size:13px}
+.context-flow{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr) 66px minmax(0,1.12fr) 66px minmax(0,1fr)}
+.context-card{border:1px solid #b7cabc;border-radius:8px;padding:8px 12px;background:#f6f9f3}
+.context-card h3{font-family:var(--mono);color:var(--teal);font-size:17px}.context-card h3 small{font:550 13px var(--sans);color:var(--soft);margin-left:5px}.context-card p{font-size:13px}
+.foot{display:flex;gap:10px;align-items:baseline;margin-top:9px;color:var(--soft);font-size:13px}
+.foot strong{color:var(--ink);white-space:nowrap;font-weight:650}
+.top-nav{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:8px 0 14px;padding:4px 0;border-block:1px solid var(--line);font-size:13px}
+.top-nav a,.backlink{color:var(--teal);text-underline-offset:3px;padding:4px 1px}
+.top-nav #language{margin-left:auto;font-weight:650}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #1c6b9a;outline-offset:3px}
+.sim{padding:19px;margin-top:18px}
+.sim-head{align-items:baseline;display:flex;justify-content:space-between;margin-bottom:12px;gap:10px}.backlink{font-size:13px}
+.sim-grid{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.6fr);gap:16px}
+.config{padding:13px 14px;border:1px solid var(--line);border-radius:8px;background:#f5f8f3}
+.config h3,.sim-result h3{font-size:17px;margin:0 0 7px}
+.config label{display:block;font-size:14px;margin-top:6px}.config select{width:100%;border:1px solid #a1b4a8;border-radius:4px;padding:5px;background:white;color:var(--ink)}.config input{accent-color:var(--teal)}
+.sim-result{border:1px solid #adc8b7;border-radius:8px;padding:12px 15px}
+.readout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:6px 12px;margin:4px 0}
+.readout dt{color:var(--soft);font-size:12px}.readout dd{font-size:14px;overflow-wrap:anywhere}
+#log{font-size:13px;color:var(--soft);margin:.5rem 0 .7rem}
+#actions{display:flex;gap:7px;flex-wrap:wrap}
+button{cursor:pointer;border:1px solid #aac2b4;background:white;color:var(--teal);border-radius:6px;padding:6px 10px;font-weight:560;font-size:13px;line-height:1.4}button.primary{background:var(--deep);border-color:var(--deep);color:white}button.check{border-color:#9db8d0;color:var(--blue)}button.hook{border-style:dashed;border-color:var(--gold-wire);color:var(--gold);background:var(--gold-bg)}
+button:hover{filter:brightness(.95)}
+[data-hot].hot{outline:2px solid #23745b;outline-offset:1px}
+.pre [data-hot].hot{outline-color:var(--blue)}.post [data-hot].hot{outline-color:var(--gold-wire)}
+.poster .top-nav,.poster .sim,.poster .nojs{display:none}
+@media (max-width:999px){.mast{flex-direction:column;align-items:flex-start;gap:9px}.panel-head{flex-wrap:wrap;gap:4px}.cols3{grid-template-columns:minmax(0,1fr) 48px minmax(0,1.07fr) 48px minmax(0,1.07fr)}.cols4{grid-template-columns:repeat(3,minmax(0,1fr) 18px) minmax(0,1fr)}.context-flow{grid-template-columns:repeat(3,minmax(0,1fr) 53px) minmax(0,1fr)}}
+@media (max-width:760px){
+html{scroll-behavior:auto}main{padding:15px 10px 24px}.mast{margin:0 3px 8px}.mast p{font-size:14px}.key{gap:5px 12px}.key li{font-size:12px}
+h1{font-size:29px}h2{font-size:21px}.panel{border-radius:11px;padding:12px 12px 14px}.panel-head{flex-direction:column;gap:4px}.note{font-size:12px}
+.top-nav{margin:8px 3px;gap:2px 10px}.top-nav #language{margin-left:0}
+.flow{display:flex;flex-direction:column}.card{padding:9px 12px}.rail{min-height:23px;align-items:flex-start;padding-left:20px}.rail b{width:0;height:23px;border-top:0;border-left:1.6px solid var(--wire)}.rail b:after{right:-2px;top:auto;bottom:1px;transform:rotate(135deg)}.rail small{position:absolute;top:2px;left:32px;bottom:auto}
+.activity-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:13px}
+.activity-layout>.flow,.activity-layout>.attach-grid{display:contents}
+.activity-layout>.flow>.card{grid-column:1}.activity-layout>.flow>.card:nth-of-type(1){grid-row:1}.activity-layout>.flow>.card:nth-of-type(2){grid-row:3}.activity-layout>.flow>.card:nth-of-type(3){grid-row:5}
+.activity-layout>.flow>.rail{grid-column:1}.activity-layout>.flow>.rail:nth-child(2){grid-row:2}.activity-layout>.flow>.rail:nth-child(4){grid-row:4}
+.attach-col{grid-column:2!important;padding:0;align-self:stretch}.attach-col:nth-child(1){grid-row:1}.attach-col:nth-child(2){grid-row:3}.attach-col:nth-child(3){grid-row:5}
+.attach-col:before{left:-13px;top:20px;width:13px;height:0;border-left:0;border-top:1.7px solid var(--wire)}.attach-col:after{top:17px;left:-7px;width:5px;height:5px;transform:rotate(-45deg)}.attach-col.post:before{border-top-style:dashed}
+.attach{padding:7px 8px}.attach h4{font-size:14px}.attach p{font-size:12px}.activity-layout .card{padding:8px}.activity-layout .card h3{font-size:16px}.activity-layout .card p{font-size:13px}
+.routes{grid-template-columns:1fr;gap:7px;padding:10px 0 0 16px}.routes:before{left:5px;right:auto;top:0;bottom:26px;height:auto;width:0;border-top:0;border-left:1.7px solid var(--wire)}.routes:after{display:none}.route:before{left:-12px;top:18px;bottom:auto;width:11px;height:0;border-left:0;border-top:1.7px solid var(--wire)}.route-source{justify-content:flex-start}.route{padding:7px 10px}
+.foot{display:block}.foot strong{margin-right:6px}
+.sim-grid,.readout{grid-template-columns:1fr}.sim-grid{gap:9px}.sim-head{align-items:flex-start}.sim{padding:12px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important}}
+@media print{.top-nav,.sim,.nojs{display:none!important}main{max-width:none;padding:0}.panel{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+.key .k-method,.key .k-method:after,.attach-col:first-child:before,.attach-col:first-child:after{border-color:#687581}
+.attach-col:first-child .attach{background:#f3f5f5;border-color:#c2cbd0;color:#3e505a}
+.context-card .continuation{display:inline-block;padding-left:2.2em}
+@media(max-width:760px){.activity-layout .card p br{display:none}}
+
+.wait-foot{display:grid;align-items:start}
+.wait-foot .foot{grid-column:1/6}
+.resume-hook{position:relative;grid-column:7;padding-top:11px;color:#714a1e}
+.resume-hook:before{content:"";position:absolute;top:0;left:21px;height:11px;border-left:1.7px dashed var(--gold-wire)}
+.resume-hook:after{content:"";position:absolute;top:4px;left:18.5px;width:5px;height:5px;border-bottom:1.7px solid var(--gold-wire);border-right:1.7px solid var(--gold-wire);transform:rotate(45deg)}
+.resume-hook > span{display:block;padding:3px 8px;border:1px dashed var(--gold-wire);border-radius:6px;background:var(--gold-bg);font-size:12px}
+@media(max-width:760px){.wait-foot{display:flex;flex-direction:column}.resume-hook{align-self:flex-start;order:-1}.wait-foot .foot{margin-top:8px}}
+/* Cross-task resource use, shown in the same start and handoff diagram. */
+.author-note{margin:10px 0 0;color:var(--soft);font-size:13px}.author-note strong{color:var(--deep)}
+.usage-band{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.usage-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 12px;margin-bottom:6px}.usage-title h3{font-size:16px;color:var(--deep);letter-spacing:-.02em}.usage-title p{color:var(--soft);font-size:13px}
+.usage-cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.usage-case{border-left:2px solid #8ca99b;padding:2px 9px;background:#f6f8f4;border-radius:0 4px 4px 0}
+.usage-case strong{display:block;font-size:14px}.usage-case span{color:var(--soft);font-size:13px}
+.usage-probe{margin-top:8px;font-size:13px;color:var(--soft)}.usage-probe summary{width:fit-content;cursor:pointer;font-weight:620;color:var(--teal)}
+.usage-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px 13px;margin:8px 0}
+.usage-controls label{display:inline-flex;gap:6px;align-items:center}.usage-controls select{max-width:100%;border:1px solid #a1b4a8;border-radius:4px;padding:4px;background:white;color:var(--ink)}.usage-controls input{accent-color:var(--teal)}
+.usage-probe output{display:block;max-width:78em;color:var(--ink)}.usage-probe summary:focus-visible{outline:3px solid #1c6b9a;outline-offset:3px}
+.poster .usage-probe{display:none}
+@media(max-width:760px){.usage-cases{grid-template-columns:1fr;gap:4px}.usage-controls{align-items:flex-start;flex-direction:column}}
+@media print{.usage-probe{display:none!important}}
+
+@media(min-width:1000px){
+  .mast .key{display:grid;grid-template-columns:auto auto;flex-shrink:0}
+}
+@media(min-width:761px){
+  .rail small{max-width:100%;white-space:normal;text-align:center;line-height:1.15}
+}
+</style>
+</head>
+<body>
+
+<main id="top">
+<header class="mast">
+  <div><h1 data-zh="任务系统协议与运行边界">Task protocol and runtime boundaries</h1><p data-zh="执行者交付成果，内核记录当前位置。每次交接只产生一个后继。">Assignees deliver results. The kernel records the current position and opens one successor at each handoff.</p></div>
+  <ul class="key" aria-label="Legend" data-zh-label="图例"><li><i aria-hidden="true"></i><span data-zh="核心流程">Core workflow</span></li><li><i class="k-method" aria-hidden="true"></i><span data-zh="可选执行方法">Optional method</span></li><li><i class="k-blue" aria-hidden="true"></i><span data-zh="接纳前校验">Pre-acceptance check</span></li><li><i class="k-gold" aria-hidden="true"></i><span data-zh="事后副作用">Post-commit effect</span></li></ul>
+</header>
+<nav class="top-nav" aria-label="Diagram sections" data-zh-label="图中位置"><a href="#binding" data-zh="登记与启动">Register and start</a><a href="#resource-usage" data-zh="资料使用">Resource use</a><a href="#activity" data-zh="最小活动">Activity</a><a href="#handoff" data-zh="交接规则">Handoffs</a><a href="#wait" data-zh="等待与恢复">Wait and resume</a><a href="#context" data-zh="上下文实例">Work item trace</a><a href="#simulate" data-zh="交互推演 ↓">Try the simulation ↓</a><a id="language" lang="zh-CN" hreflang="zh-CN" href="?lang=zh-CN" hidden>简体中文</a></nav>
+<section class="panel" id="binding" aria-labelledby="binding-title">
+  <div class="panel-head"><div class="title"><span class="secno" aria-hidden="true">01</span><h2 id="binding-title" data-zh="定义登记与启动">Register a definition and start an instance</h2></div><span class="note" data-zh="先登记可复用定义。启动时才绑定本次执行者。">Register the reusable definition first. Bind the actors when an instance starts.</span></div>
+  <div class="flow cols3">
+    <article class="card"><div class="who" data-zh="管理方 · 发布接口">Publisher · Registration</div><h3><code>publishDefinition</code></h3><p><span data-zh="编排 Agent 把目标写成活动并校验。获权登记后，用 ">The agent defines and validates the activities. After authorized publication, use </span><code>D@1</code><span data-zh=" 读回完整定义。"> to read the complete definition.</span></p></article>
+    <div class="rail" aria-hidden="true"><small data-zh="按需启动">On launch</small><b></b></div>
+    <article class="card selected" data-hot="start"><div class="who" data-zh="管理方 · 启动接口">Assigner · Launch</div><h3><code>startTask</code></h3><p><span data-zh="交付者 → ">Contributor → </span><code>P1</code><span data-zh="　复核者 → "> · Reviewer → </span><code>P2</code><br><span data-zh="固定 ">Pin </span><code>D@1</code><span data-zh="、初始输入 ">, initial input </span><code>M@1</code><span data-zh=" 与受信来源。"> and the trusted source.</span></p></article>
+    <div class="rail" aria-hidden="true"><small data-zh="同一事务">Atomically</small><b></b></div>
+    <article class="card"><div class="who" data-zh="内核 · 按入口活动的角色指派">Kernel · Assignment by entry role</div><h3><span data-zh="打开首轮待办 ">Open first work item </span><code>A-1</code></h3><p><span data-zh="执行者 ">Assignee </span><code>P1</code><span data-zh="，输入 ">, input </span><code>basis = M@1</code><span data-zh="。">. </span><br><span data-zh="每次开待办均按这份绑定指派执行者。">Each new work item uses the pinned role bindings.</span></p></article>
+  </div>
+  <p class="author-note"><strong data-zh="编排 Agent">Authoring agent</strong><span data-zh="　发现能力 → 编写活动与交接 → 校验并推演 → 授权登记 → 按修订读回。只要求登记时，到读回即完成。"> · Discover capabilities → define activities and handoffs → validate and replay → publish with permission → read the exact revision. A registration-only request ends here.</span></p>
+  <aside class="usage-band" id="resource-usage" aria-labelledby="usage-title">
+    <div class="usage-title"><h3 id="usage-title" data-zh="跨任务资料登记">Register resource use across tasks</h3><p data-zh="启动时登记，分支绑定新目标时再查。资料列表和任务卡按权限显示同一份使用情况。">Register at launch and check new targets on handoff. Resource lists and task views show the same authorized uses.</p></div>
+    <div class="usage-cases">
+      <div class="usage-case"><strong data-zh="一份固定读，一份改写">One pinned read, one write</strong><span data-zh="继续读取已绑定的 R@3，两项可并行。">The reader keeps R@3. Both tasks can proceed.</span></div>
+      <div class="usage-case"><strong data-zh="两份任务改同一原件 R">Two tasks change original R</strong><span data-zh="登记即提醒，区分计划、本轮及真实编辑会话。">Report the overlap at registration. Show planned use, current use and active editing sessions distinctly.</span></div>
+      <div class="usage-case"><strong data-zh="基于旧稿整份替换">Replacing an older version</strong><span data-zh="由内容服务在保存时核对基线。拒绝旧替换，保留候选。">The content service checks the baseline at save time, rejects a stale replacement and retains the candidate.</span></div>
+    </div>
+    <details class="usage-probe" id="usage-probe" hidden>
+      <summary data-zh="试算两份任务使用同一原件">Compare two tasks using one original</summary>
+      <div class="usage-controls">
+        <label><span data-zh="任务 A ">Task A </span><select id="usage-a"><option value="readVersion" data-zh="读固定版本">Read pinned version</option><option value="readLive" data-zh="读实时原稿">Read live original</option><option value="edit" selected data-zh="协作编辑">Collaborative edit</option><option value="replace" data-zh="整份替换">Replace original</option></select></label>
+        <label><span data-zh="任务 B ">Task B </span><select id="usage-b"><option value="readVersion" data-zh="读固定版本">Read pinned version</option><option value="readLive" data-zh="读实时原稿">Read live original</option><option value="edit" data-zh="协作编辑">Collaborative edit</option><option value="replace" selected data-zh="整份替换">Replace original</option></select></label>
+        <label><input type="checkbox" id="usage-planned"><span data-zh=" B 还在计划中"> B is still planned</span></label>
+      </div>
+      <output id="usage-verdict" for="usage-a usage-b usage-planned" aria-live="polite"></output>
+    </details>
+  </aside>
+</section>
+<section class="panel" id="activity" aria-labelledby="activity-title">
+  <div class="panel-head"><div class="title"><span class="secno" aria-hidden="true">02</span><h2 id="activity-title" data-zh="一个最小活动">One activity, from work to acceptance</h2></div><span class="note" data-zh="一位执行者对一个子目标和一份交付负责。待校验时仍是原待办。">One assignee owns one goal and one deliverable. The work item stays current while checks run.</span></div>
+  <div class="activity-layout">
+    <div class="flow cols3">
+      <article class="card" data-hot="work"><div class="who" data-zh="执行者 · 读接口">Assignee · Read</div><h3><code>getWork</code><span data-zh=" 接待办"> · Read work</span></h3><p><span data-zh="读本活动的子目标 ">Read the activity </span><code>goal</code><span data-zh="、执行约定 ">, its </span><code>execution</code><span data-zh="、本轮输入和交付要求。"> contract, this round’s inputs and the required output.</span></p></article>
+      <div class="rail" aria-hidden="true"><small data-zh="执行后">Submit</small><b></b></div>
+      <article class="card" data-hot="candidate"><div class="who" data-zh="执行者 · 写接口">Assignee · Write</div><h3><code>submitResult</code><span data-zh=" 交候选"> · Submit candidate</span></h3><p><span data-zh="按待办、轮次和视图版本提交。">Submit against the work ID, round and view version.</span><br><span data-zh="内核为本次尝试固定候选与校验依据。">The kernel freezes the candidate and its check inputs for this attempt.</span></p></article>
+      <div class="rail" aria-hidden="true"><small data-zh="条件满足">Checks pass</small><b></b></div>
+      <article class="card deep" data-hot="accept"><div class="who" data-zh="内核 · 内部交接事务">Kernel · Handoff transaction</div><h3><code>accept</code><span data-zh=" 接纳本轮"> · Accept result</span></h3><p><span data-zh="权限、必需检查与后继均就绪。">Permissions, required checks and successor are ready.</span><br><strong data-zh="固定正式成果、关闭本轮、安装一个后继。">Record the result, close this round and install one successor.</strong></p></article>
+    </div>
+    <div class="attach-grid cols3">
+      <div class="attach-col"><aside class="attach"><h4><span data-zh="指定方法时 · ">Specified method · </span><code>executeWith</code></h4><p data-zh="规则型按文字说明处理。方法型调用绑定版本，再由执行者提交结果。">Follow the instructions for a rule. For a method, call the pinned version and submit its output.</p></aside></div>
+      <div class="attach-col pre"><aside class="attach" data-hot="check"><h4><span data-zh="接纳前 · 检查钩子 ">Before acceptance · </span><code>check</code></h4><p><code>checkArtifact@1</code><span data-zh=" 对照预期与候选。同步返回或经 "> compares the candidate with the requirements. Return a verdict directly or via </span><code>deliverCheck</code><span data-zh=" 回传。全部通过 → 接纳，拒绝 ↩ 原待办补正。">. All pass → accept. A rejection reopens the round for correction.</span></p></aside></div>
+      <div class="attach-col post"><aside class="attach" data-hot="after"><h4><span data-zh="事务提交后 · 事后钩子 ">After commit · </span><code>after</code></h4><p><span data-zh="例 ">For example, </span><code>wait.opened → notify@1</code><span data-zh="。提醒可重试，送达只更新投递记录。">. A reminder can be retried. Delivery updates only its own record.</span></p></aside></div>
+    </div>
+  </div>
+</section>
+<section class="panel" id="handoff" aria-labelledby="handoff-title">
+  <div class="panel-head"><div class="title"><span class="secno" aria-hidden="true">03</span><h2 id="handoff-title" data-zh="活动之间如何交接">How activities hand off work</h2></div><span class="note" data-zh="开后继时，核验执行者及输入权限，并为新绑定的资料补登记。">Check the next assignee and input permissions, then register newly bound resources.</span></div>
+  <div class="route-source"><span><code>accept</code><span data-zh=" 按定义顺序选择首个命中规则，否则取默认出口"> takes the first matching rule in order, or the default exit</span></span></div>
+  <div class="routes">
+    <article class="route" data-hot="next"><h3><code>next</code><span data-zh=" 顺接"> Continue</span></h3><p><span data-zh="按目标角色开新待办。从空输入开始，只带入本条 ">Open work for the target role. Start with empty inputs and carry only what </span><code>with</code><span data-zh=" 映射的字段。"> maps on this edge.</span></p></article>
+    <article class="route" data-hot="return"><h3><code>return</code><span data-zh=" 退回"> Revise</span></h3><p data-zh="按指定成果找回原活动与原输入。开新轮，带入返修基线、理由与可改范围。">Locate the original work and inputs by the specified result. Open a new round with its baseline, reason and edit scope.</p></article>
+    <article class="route" data-hot="wait"><h3><code>wait</code><span data-zh=" 暂停"> Wait</span></h3><p data-zh="登记等待与续接规则。已知输入就地固定，外部事实留待匹配后填入。">Register the wait and its continuation. Pin known inputs now and fill in the fact when it matches.</p></article>
+    <article class="route" data-hot="end"><h3><code>end</code><span data-zh=" 结束"> Complete</span></h3><p><span data-zh="固定最终交付与结束决定的成果引用。实例进入 ">Pin the final deliverable and the result that chose it. The instance enters </span><code>COMPLETED</code><span data-zh="。">. </span></p></article>
+  </div>
+</section>
+<section class="panel" id="wait" aria-labelledby="wait-title">
+  <div class="panel-head"><div class="title"><span class="secno" aria-hidden="true">04</span><h2 id="wait-title" data-zh="暂停后如何继续">How an external fact resumes a wait</h2></div><span class="note"><code>WAITING_EXTERNAL</code><span data-zh=" 由受信来源的事实唤醒。"> resumes on a fact from the bound source.</span></span></div>
+  <div class="flow cols4 wait-flow">
+    <article class="card" data-hot="registered"><div class="who" data-zh="内核 · 等待出口">Kernel · Wait exit</div><h3><span data-zh="登记等待 ">Register wait </span><code>W1</code></h3><p data-zh="固定来源、对象版本、条件和续接映射。需要请求时，同时登记请求编号。">Pin the source, subject version, condition and continuation. Register a request ID if needed.</p></article>
+    <div class="rail" aria-hidden="true"><b></b></div>
+    <article class="card"><div class="who" data-zh="来源适配器 · 两种接入">Source adapter · Two modes</div><h3 data-zh="请求或观察">Request or observe</h3><p><code>request</code><span data-zh=" 按请求号调用 "> uses the request ID to call </span><code>collect@1</code><span data-zh="。">. </span><code>observe</code><span data-zh=" 从快照或游标观察来源变化。"> follows changes from a snapshot or cursor.</span></p></article>
+    <div class="rail" aria-hidden="true"><b></b></div>
+    <article class="card" data-hot="signal"><div class="who" data-zh="受信来源 · 事实入口">Trusted source · Fact delivery</div><h3><code>signal</code><span data-zh=" 回传事实"> · Deliver fact</span></h3><p><span data-zh="核对等待编号、来源、对象版本和条件。未命中时保留 ">Check the wait ID, source, subject version and condition. A mismatch leaves the wait open at </span><code>W1</code><span data-zh="。">. </span></p></article>
+    <div class="rail" aria-hidden="true"><b></b></div>
+    <article class="card deep" data-hot="resume"><div class="who" data-zh="内核 · 匹配且可交接">Kernel · Match and handoff</div><h3><code>resume</code><span data-zh=" 消费等待"> · Consume wait</span></h3><p><span data-zh="补入匹配事实，同一事务消费 ">Add the matched fact. Consume </span><code>W1</code><span data-zh=" 一次，依冻结的续接规则开待办或结束。"> once and open the next work item or end in the same transaction.</span></p></article>
+  </div>
+  <div class="wait-foot cols4">
+    <p class="foot"><strong data-zh="未能立即交接">When the successor is unavailable</strong><span data-zh="事实已匹配、后继资料暂不可读时，保存原事实并保留等待。权限恢复后接续，重复回传沿用原回执。">If a fact matches but required materials are temporarily unreadable, keep the fact and wait. Resume when access returns. Repeat delivery reuses the receipt.</span></p>
+    <div class="resume-hook"><span><code>wait.resumed → after</code><span data-zh=" · 可选"> · Optional</span></span></div>
+  </div>
+</section>
+<section class="panel" id="context" aria-labelledby="context-title">
+  <div class="panel-head"><div class="title"><span class="secno" aria-hidden="true">05</span><h2 id="context-title" data-zh="追踪一份实例的上下文">Trace the inputs through one instance</h2></div><span class="note" data-zh="每格是一份独立待办。连线标出这一次实际采用的交接。">Each box is a separate work item. The arrows show the handoffs actually taken.</span></div>
+  <div class="flow context-flow">
+    <article class="context-card"><h3>A-1 <small data-zh="执行者 P1">Assignee P1</small></h3><p><span data-zh="输入 ">Input </span><code>basis = M@1</code><br><span data-zh="接纳成果 ">Accepted result </span><code>FA1</code></p></article>
+    <div class="rail" aria-label="Wait W1 resumes when fact F1 matches" data-zh-label="等待 W1，事实 F1 匹配后恢复"><small><code>F1</code><span data-zh=" 唤醒 "> wakes </span><code>W1</code></small><b></b></div>
+    <article class="context-card"><h3>B-1 <small data-zh="执行者 P2">Assignee P2</small></h3><p><span data-zh="输入 ">Input </span><code>item = FA1</code><br><span class="continuation"><code>evidence = F1</code></span><br><span data-zh="接纳退回决定 ">Return decision </span><code>FB1</code></p></article>
+    <div class="rail" aria-label="Return from FB1" data-zh-label="从 FB1 退回"><small data-zh="退回新轮">Rework</small><b></b></div>
+    <article class="context-card"><h3>A-2 <small data-zh="执行者 P1">Assignee P1</small></h3><p><span data-zh="原输入 ">Original input </span><code>basis = M@1</code><span data-zh="，基线 ">, baseline </span><code>FA1</code><br><span data-zh="接纳修订成果 ">Revised result </span><code>FA2</code></p></article>
+    <div class="rail" aria-label="Continue directly to B-2" data-zh-label="顺接 B-2"><small data-zh="直接顺接">Direct</small><b></b></div>
+    <article class="context-card"><h3>B-2 <small data-zh="执行者 P2">Assignee P2</small></h3><p><span data-zh="输入仅 ">Only input </span><code>item = FA2</code><br><span data-zh="最终交付 ">Final delivery </span><code>FA2</code><span data-zh="，结束决定 ">, decision </span><code>FB2</code></p></article>
+  </div>
+  <p class="foot"><strong data-zh="为什么 B-2 只见到 FA2？">Why does B-2 see only FA2?</strong><span><span data-zh="该顺接仅映射 ">The direct edge maps only </span><code>item</code><span data-zh="。">. </span><code>F1</code><span data-zh=" 归属于 "> belongs to the continuation of </span><code>W1</code><span data-zh=" 的接续，仍可在 "> and is still available in the authorized history for </span><code>B-1</code><span data-zh=" 的授权历史中查到。">.</span></span></p>
+</section>
+<section class="panel sim" id="simulate" hidden aria-labelledby="sim-title">
+  <div class="sim-head"><h2 id="sim-title" data-zh="沿协议走一遍">Try the protocol</h2><a class="backlink" href="#top" data-zh="返回总图 ↑">Back to overview ↑</a></div>
+  <div class="sim-grid">
+    <div class="config"><h3 data-zh="实例配置">Instance settings</h3><p class="note" data-zh="图中 D@1 使用关联请求和异步校验。其他组合使用独立的示例定义。">D@1 uses a correlated request and an asynchronous check. Other combinations use separate example definitions.</p>
+      <label for="wait-mode" data-zh="等待接入方式">Wait mode</label><select id="wait-mode"><option value="request" data-zh="request · 发起关联请求">request · Send a correlated request</option><option value="observe" data-zh="observe · 观察既有状态">observe · Observe existing state</option></select>
+      <label for="async-check"><input type="checkbox" id="async-check" checked><span data-zh=" 活动 A 启用异步校验"> Require an asynchronous check on activity A</span></label>
+    </div>
+    <div class="sim-result" aria-live="polite" aria-atomic="true"><h3 id="location" data-zh="定义已发布">Definition published</h3>
+      <dl class="readout"><div><dt data-zh="当前位置与执行者">Current position and assignee</dt><dd id="position"></dd></div><div><dt data-zh="本轮输入或等待依据">Round inputs or wait evidence</dt><dd id="inputs"></dd></div></dl>
+      <p class="note" id="status-fact"></p><p id="log"></p><div id="actions"></div>
+    </div>
+  </div>
+</section>
+<noscript><p class="nojs" data-zh="启用 JavaScript 可在图下试走各条接续路径。">Enable JavaScript to try the handoffs in the simulation.</p></noscript>
+</main>
+
+<script>
+"use strict";
+const chinese = new URLSearchParams(location.search).get("lang") === "zh-CN";
+const t = (english, simplifiedChinese) => chinese ? simplifiedChinese : english;
+if (chinese) {
+  document.documentElement.lang = "zh-CN";
+  for (const node of document.querySelectorAll("[data-zh]")) node.textContent = node.dataset.zh;
+  for (const node of document.querySelectorAll("[data-zh-label]")) node.setAttribute("aria-label", node.dataset.zhLabel);
+}
+const languageLink = document.getElementById("language");
+if (chinese) {
+  languageLink.textContent = "English";
+  languageLink.lang = languageLink.hreflang = "en";
+  languageLink.href = "?lang=en";
+}
+languageLink.hidden = false;
+const byId = id => document.getElementById(id);
+const controls = byId("actions");
+const mode = byId("wait-mode");
+const check = byId("async-check");
+const sim = byId("simulate");
+const roleByActivity = {A:"交付者", B:"复核者"};
+const choicesByPhase = {
+  ready: [["start",t("Bind roles and start", "绑定角色并启动"),"primary"]],
+  A: [["conditional",t("Submit and wait", "提交 · 选择等待路径"),"primary"],["default",t("Submit for direct review", "提交 · 选择顺接路径"),""],["missing",t("Submit with a missing field", "试交缺项候选"),"check"]],
+  B: [["end",t("Approve and finish", "提交结束决定"),"primary"],["back",t("Return for revision", "提交退回决定"),""]],
+  check: [["pass",t("Pass the check", "回传检查通过"),"primary"],["reject",t("Reject the candidate", "回传检查拒绝"),"check"]],
+  wait: [["match",t("Deliver a matching fact", "回传匹配事实"),"primary"],["miss",t("Deliver a nonmatching fact", "回传未满足条件的事实"),""],["blocked",t("Match while materials are unavailable", "匹配，但后继资料暂不可读"),""]],
+  held: [["restore",t("Restore access to materials", "恢复资料权限"),"primary"]],
+  done: []
+};
+let state;
+
+function selectedDefinition() {
+  const request = mode.value === "request";
+  const id = request && check.checked ? "D@1" : (request ? "D-request" : "D-observe")+(check.checked ? "-async@1" : "-sync@1");
+  return {id,mode:mode.value,async:check.checked};
+}
+function initial() {
+  return {phase:"ready",definition:null,bindings:null,roundA:0,roundB:0,records:[],position:null,wait:null,pending:null,lastSignal:null,final:null,attempts:0};
+}
+function openWork(activity, inputs, base) {
+  const round = activity === "A" ? ++state.roundA : ++state.roundB;
+  state.position = {activity,round,id:activity+"-"+round,actor:state.bindings[roleByActivity[activity]],inputs:{...inputs},base:base || null};
+  state.phase = activity;
+}
+function readableInputs(inputs) {
+  return Object.entries(inputs).map(entry => entry[0]+" = "+entry[1]).join(t(", ", "，"));
+}
+function snapshot() {
+  if (state.phase === "ready") return [t("Definition published", "定义已发布"),selectedDefinition().id+t(" · Ready to start", " · 尚未启动"),t("Initial resource M@1 and source slot S", "入口资料 M@1，来源槽位 S")];
+  if (state.phase === "done") return [t("Instance completed", "实例已结束"),"COMPLETED",t(`Final deliverable ${state.final.item}, closing decision ${state.final.decision}`, "最终交付 "+state.final.item+"，结束依据 "+state.final.decision)];
+  if (state.wait) {
+    const w = state.wait;
+    return [t("Wait ", "等待 ")+w.id,t("WAITING_EXTERNAL · Source S", "WAITING_EXTERNAL · 来源 S"),t("Pinned item = ", "已固定 item = ")+w.item+t(", ", "，")+(w.fact ? t("stored fact ", "已保存待接续事实 ")+w.fact : t("awaiting evidence", "待填 evidence"))];
+  }
+  const work = state.position;
+  const where = state.pending ? "ACTIVE / PENDING · "+state.pending.id : "ACTIVE / OPEN";
+  const base = work.base ? t(", rework baseline ", "，返修基线 ")+work.base : "";
+  return [work.id+t(" · Assignee ", " · 执行者 ")+work.actor,where,readableInputs(work.inputs)+base];
+}
+function show(message, highlights, keyboard) {
+  const [location,position,inputs] = snapshot();
+  byId("location").textContent = location;
+  byId("position").textContent = position;
+  byId("inputs").textContent = inputs;
+  byId("log").textContent = message;
+  const receipts = state.records.map(record=>record.id).join(t(", ", "、"));
+  const revision = (state.definition || selectedDefinition()).id;
+  let summary = t(`Definition ${revision} · Accepted results ${state.records.length}`,
+                  `定义 ${revision} · 已接纳成果 ${state.records.length} 份`);
+  if (receipts) summary += " · "+receipts;
+  if (state.wait) summary += state.wait.mode === "request" ? t(" · Correlated request ", " · 关联请求 ")+state.wait.request : t(" · Starting cursor registered", " · 已登记起始游标");
+  byId("status-fact").textContent = summary;
+  mode.disabled = check.disabled = state.phase !== "ready";
+  document.querySelectorAll("[data-hot]").forEach(node => node.classList.toggle("hot",highlights.includes(node.dataset.hot)));
+  const choices = (choicesByPhase[state.phase] || []).slice();
+  if (state.wait && !state.wait.notified) choices.push(["notice",t("Deliver the reminder", "模拟事后提醒送达"),"hook"]);
+  if (state.lastSignal && !state.wait) choices.push(["replay",t("Replay the consumed event", "重放已消费的同一事件"),""]);
+  if (state.phase !== "ready") choices.push(["reset",t("Restart simulation", "重新推演"),""]);
+  controls.replaceChildren();
+  for (const [action,title,style] of choices) {
+    const button = document.createElement("button");
+    button.type = "button"; button.dataset.action = action; button.className = style; button.textContent = title;
+    controls.append(button);
+  }
+  if (keyboard) controls.querySelector("button")?.focus({preventScroll:true});
+}
+function accept(candidate, keyboard) {
+  const work = state.position;
+  const result = "F"+work.activity+work.round;
+  state.records.push({id:result,inputs:{...work.inputs}});
+  state.pending = null;
+  if (candidate.action === "conditional") {
+    const num = work.round;
+    state.wait = {id:"W"+num,item:result,mode:state.definition.mode,request:state.definition.mode === "request" ? "E"+num : null,fact:null,notified:false,number:num};
+    state.position = null;
+    state.phase = "wait";
+    const setup = state.definition.mode === "request" ? t(`Register request ${state.wait.request} in the same transaction and deliver it with that ID.`, "同事务登记关联请求 "+state.wait.request+"，携原编号交给受托方法。") : t("Persist the observation intent. Read a consistent snapshot and follow changes from its cursor.", "同时登记观察意图。读取一致快照，并从对应游标补读来源变化。");
+    show(t(`Accept ${result}. The rule matches and opens wait ${state.wait.id}. ${setup}`, "接纳 "+result+"，条件命中，登记等待 "+state.wait.id+"。"+setup),["accept","wait","registered"],keyboard);
+  } else if (candidate.action === "default") {
+    openWork("B",{item:result});
+    show(t(`Accept ${result}. The default route opens ${state.position.id}. Its with mapping carries only item.`, "接纳 "+result+"，默认规则打开 "+state.position.id+"。本条 with 只映射 item。"),["accept","next","work"],keyboard);
+  } else if (candidate.action === "back") {
+    const base = work.inputs.item;
+    const original = state.records.find(record=>record.id === base);
+    openWork("A",original.inputs,base);
+    show(t(`Accept ${result}. Use ${base} to recover the original inputs. Revise the deliverable and route. Only artifact and needsExternal are editable.`, "接纳 "+result+"，依据 "+base+" 定位原待办并带回其输入。返修理由为修订交付与路径，范围为 artifact 和 needsExternal。"),["accept","return","work"],keyboard);
+  } else {
+    state.final = {item:work.inputs.item,decision:result};
+    state.position = null;
+    state.phase = "done";
+    show(t(`Accept ${result}. Pin the selected final deliverable and this round’s closing decision together.`, "接纳 "+result+"，同时固定所选最终交付及本轮结束决定。"),["accept","end"],keyboard);
+  }
+}
+function submit(action, keyboard) {
+  const work = state.position;
+  const candidate = {id:"x"+(++state.attempts),workId:work.id,action};
+  if (action === "missing") {
+    show(t(`Missing artifact. Return its field path and keep ${work.id} open for correction in the same round.`, "本次候选缺少 artifact，返回字段路径。"+work.id+" 继续开放，原轮可以补正。"),["candidate","work"],keyboard);
+  } else if (work.activity === "A" && state.definition.async) {
+    state.pending = candidate;
+    state.phase = "check";
+    show(t(`Freeze candidate ${candidate.id} and this round’s requirements. ${work.id} stays current until the asynchronous check passes.`, "候选 "+candidate.id+" 与本轮预期已固定。异步检查通过后才能接纳，仍由 "+work.id+" 占据当前位置。"),["candidate","check"],keyboard);
+  } else {
+    accept(candidate,keyboard);
+  }
+}
+function resume(fact, keyboard) {
+  const w = state.wait;
+  state.lastSignal = {fact,waitId:w.id};
+  openWork("B",{item:w.item,evidence:fact});
+  state.wait = null;
+  show(t(`Trusted fact ${fact} matches. Consume ${w.id} once and open ${state.position.id} with the saved continuation mapping.`, "受信事实 "+fact+" 满足条件。内核一次性消费 "+w.id+"，按原续接映射打开 "+state.position.id+"。"),["signal","resume","work"],keyboard);
+}
+function handle(action,keyboard) {
+  if (action === "reset") {
+    state = initial(); mode.value = "request"; check.checked = true;
+    show(t("Launch binds the contributor to P1, the reviewer to P2, and the source to S.", "启动时固定交付者 → P1、复核者 → P2 和来源 S。"),[],keyboard);
+  } else if (action === "start") {
+    state.definition = selectedDefinition();
+    state.bindings = {"交付者":"P1","复核者":"P2"};
+    openWork("A",{basis:"M@1"});
+    show(t("In one transaction, startTask pins the bindings, opens A-1 and registers a pinned read of M@1. P1 reads the goal “Deliver a versioned artifact” through getWork. The goal supplies the instructions, and M@1 is the input.", "startTask 同事务保存启动绑定、创建 A-1 并登记固定读取 M@1。P1 用 getWork 读到子目标“交付一个有版本的成果”。本活动按目标原文执行，输入为 M@1。"),["start","work"],keyboard);
+  } else if (["conditional","default","missing","back","end"].includes(action)) {
+    submit(action,keyboard);
+  } else if (action === "pass") {
+    accept(state.pending,keyboard);
+  } else if (action === "reject") {
+    const id = state.pending.id;
+    state.pending = null; state.phase = state.position.activity;
+    show(t(`deliverCheck rejected attempt ${id}. Reopen ${state.position.id} for a corrected submission in the same round.`, "deliverCheck 拒绝了尝试 "+id+"，原轮 "+state.position.id+" 重新开放，补正后可以另交一次。"),["check","work"],keyboard);
+  } else if (action === "notice") {
+    state.wait.notified = true;
+    show(t(`The reminder for wait.opened was delivered. Wait ${state.wait.id} stays open.`, "wait.opened 对应的事后提醒已送达，当前等待 "+state.wait.id+" 保持开放。"),["registered","after"],keyboard);
+  } else if (action === "miss") {
+    show(t("The source and subject match, but ready is false. The signal receipt is not_matched and the wait stays open.", "来源 S 回传的事实与对象匹配，ready 条件尚未满足。信号回执为 not_matched，原等待继续开放。"),["registered","signal"],keyboard);
+  } else if (action === "blocked") {
+    state.wait.fact = "F"+state.wait.number; state.phase = "held";
+    show(t("The fact matches, but the next assignee cannot currently read the required materials. The kernel saves the fact and a pending receipt and will recheck this wait.", "事实已匹配，但后继主体暂时无权读取指定资料。保存事实和 pending 回执，内核负责原地重验。"),["registered","signal"],keyboard);
+  } else if (action === "match" || action === "restore") {
+    resume(state.wait.fact || "F"+state.wait.number,keyboard);
+  } else if (action === "replay") {
+    show(t(`The source resent ${state.lastSignal.fact} with its original key. Return the receipt for ${state.lastSignal.waitId}. The position and result count stay the same.`, "同一来源按原键重发 "+state.lastSignal.fact+"。返回 "+state.lastSignal.waitId+" 的原回执，当前位置与成果数保持原值。"),["signal"],keyboard);
+  }
+}
+controls.addEventListener("click",event=>{
+  const button = event.target.closest("button[data-action]");
+  if (button && controls.contains(button)) handle(button.dataset.action,event.detail === 0);
+});
+for (const config of [mode,check]) config.addEventListener("change",()=>{
+  if (state.phase === "ready") show(t("The selected example definition and role bindings will be pinned at launch.", "已选用独立的示例定义，启动时固定该修订及角色绑定。"),[],false);
+});
+const usageProbe = byId("usage-probe");
+function previewResourceUse() {
+  const modes = [byId("usage-a").value,byId("usage-b").value];
+  const planned = byId("usage-planned").checked;
+  const writes = modes.filter(mode=>mode==="edit" || mode==="replace").length;
+  const verdict = byId("usage-verdict");
+  let message;
+  if (modes.includes("readVersion") || writes===0) {
+    message = t("Both uses can proceed. A pinned read keeps its version, and two readers can read concurrently.", "可并行。固定版本仍按原版本读取，两份只读用途也可同时进行。");
+  } else if (planned) {
+    message = t("Planned overlap. Launch reports a possible change to the original. Check again when B enters the activity.", "计划重合。启动时提示原件可能被改写，B 真正进入该活动时重新查重。");
+  } else if (writes===1) {
+    message = t("A live reader and a writer share the original. The reader may see changes. Pin a version when stable input is required.", "实时读遇写。任务看到的原稿可能变化，需要稳定输入时先固定版本。");
+  } else {
+    message = t("Both tasks intend to change the same original. Report the overlap at registration. ", "同一原件有两项改写，登记时立即提醒。");
+    message += modes.includes("replace") ? t("For a replacement, the content service checks the baseline and rejects a stale write.", "整份替换时由内容服务比较基线，旧基线无法覆盖原稿。") : t("The document service can merge the two collaborative edits.", "两项协作编辑可由文档服务合并。");
+  }
+  verdict.textContent = message;
+}
+usageProbe.addEventListener("change",previewResourceUse);
+usageProbe.hidden = false;
+previewResourceUse();
+sim.hidden = false;
+if (new URLSearchParams(location.search).get("view") === "poster") document.documentElement.classList.add("poster");
+handle("reset",false);
+</script>
+</body>
+</html>

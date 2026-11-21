@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task protocol messages 1.0 / 任务协议消息 1.0",
+  "description": "Each message carries exactly one of params, result or error. The transport authenticates the caller. Role bindings designate activity assignees.\n\n每条消息只含 params、result 或 error 中的一项。调用主体由传输层认证，角色绑定仅指定活动的执行者。",
+  "$comment": "Resolve definition.schema.json in the same directory using this schema's retrieval URI as the base. The host checks permissions, catalog resolution and rules that depend on the published definition.\n\n调用端须以本文件的检索 URI 为基准加载同目录的 definition.schema.json。权限、目录解析及与已发布定义相关的规则由宿主核验。",
+  "type": "object",
+  "required": ["protocolVersion", "op"],
+  "properties": {
+    "protocolVersion": {"const": "1.0"},
+    "op": {"$ref": "#/$defs/operation"},
+    "params": {"type": "object"},
+    "result": {"type": "object"},
+    "error": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {"code": {"$ref": "#/$defs/nonBlank"}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "oneOf": [{"required": ["params"]}, {"required": ["result"]}, {"required": ["error"]}],
+  "allOf": [
+    {"if": {"properties": {"op": {"const": "describeTaskProtocol"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/describeParams"}, "result": {"$ref": "#/$defs/describeResult"}}}},
+    {"if": {"properties": {"op": {"const": "validateDefinition"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/validateParams"}, "result": {"$ref": "#/$defs/validateResult"}}}},
+    {"if": {"properties": {"op": {"const": "publishDefinition"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/publishParams"}, "result": {"$ref": "#/$defs/definitionRef"}}}},
+    {"if": {"properties": {"op": {"const": "readDefinition"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/definitionRef"}, "result": {"$ref": "#/$defs/readDefinitionResult"}}}},
+    {"if": {"properties": {"op": {"const": "startTask"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/startParams"}, "result": {"$ref": "#/$defs/startResult"}}}},
+    {"if": {"properties": {"op": {"const": "getWork"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/getWorkParams"}, "result": {"$ref": "#/$defs/getWorkResult"}}}},
+    {"if": {"properties": {"op": {"const": "submitResult"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/submitParams"}, "result": {"$ref": "#/$defs/submitReceipt"}}}},
+    {"if": {"properties": {"op": {"const": "signal"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/signalParams"}, "result": {"$ref": "#/$defs/signalReceipt"}}}},
+    {"if": {"properties": {"op": {"const": "getResourceUsage"}}}, "then": {"properties": {"params": {"$ref": "#/$defs/resourceUsageParams"}, "result": {"$ref": "#/$defs/resourceUsage"}}}}
+  ],
+  "$defs": {
+    "operation": {"enum": ["describeTaskProtocol", "validateDefinition", "publishDefinition", "readDefinition", "startTask", "getWork", "submitResult", "signal", "getResourceUsage"]},
+    "document": {"$ref": "definition.schema.json"},
+    "nonBlank": {"$ref": "definition.schema.json#/$defs/nonBlank"},
+    "identifier": {"$ref": "definition.schema.json#/$defs/identifier"},
+    "methodRef": {"$ref": "definition.schema.json#/$defs/methodRef"},
+    "fieldPaths": {"type": "array", "uniqueItems": true, "items": {"$ref": "definition.schema.json#/$defs/fieldPath"}},
+    "strings": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/nonBlank"}},
+    "sequence": {"type": "integer", "minimum": 1},
+    "version": {"oneOf": [{"$ref": "#/$defs/nonBlank"}, {"type": "integer", "minimum": 0}]},
+    "ref": {
+      "type": "object", "required": ["id", "version"],
+      "properties": {"id": {"$ref": "#/$defs/nonBlank"}, "version": {"$ref": "#/$defs/version"}},
+      "additionalProperties": false
+    },
+    "actorBinding": {
+      "type": "object", "required": ["kind", "id"],
+      "properties": {"kind": {"enum": ["member", "agent"]}, "id": {"$ref": "#/$defs/nonBlank"}},
+      "additionalProperties": false
+    },
+    "bindings": {
+      "type": "object", "propertyNames": {"$ref": "#/$defs/identifier"},
+      "additionalProperties": {"$ref": "#/$defs/actorBinding"}
+    },
+    "valueMap": {
+      "description": "Keys, value types and required fields come from the referenced activity, method or wait contract. The host handles missing fields under its business rules.\n\n键、值类型和必填项取本次引用的活动、方法或等待契约，缺项由宿主按业务规则处理。",
+      "type": "object"
+    },
+    "definitionRef": {
+      "type": "object", "required": ["definition"],
+      "properties": {"definition": {"$ref": "#/$defs/nonBlank"}},
+      "additionalProperties": false
+    },
+    "describeParams": {
+      "type": "object",
+      "properties": {"taskId": {"$ref": "#/$defs/nonBlank"}},
+      "additionalProperties": false
+    },
+    "describeResult": {
+      "type": "object", "required": ["protocolVersions", "operations", "capabilities"],
+      "properties": {
+        "protocolVersions": {"$ref": "#/$defs/strings", "minItems": 1},
+        "operations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/operation"}},
+        "capabilities": {"$ref": "#/$defs/strings"},
+        "directory": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["kind", "name", "ref"],
+            "properties": {
+              "kind": {"enum": ["actor", "method", "source", "resource", "assignment"]},
+              "name": {"$ref": "#/$defs/nonBlank"}, "ref": {"$ref": "#/$defs/nonBlank"}, "purpose": {"$ref": "#/$defs/nonBlank"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "validateParams": {
+      "type": "object", "required": ["document"],
+      "properties": {
+        "document": {"type": "object", "description": "A draft submitted for diagnosis. The host reports structural and semantic issues in the issues array.\n\n待诊断的草稿。形状和语义问题由宿主从 issues 返回。"},
+        "launch": {
+          "type": "object", "required": ["assignmentId", "bindings", "input"],
+          "properties": {"assignmentId": {"$ref": "#/$defs/nonBlank"}, "bindings": {"$ref": "#/$defs/bindings"}, "input": {"$ref": "#/$defs/valueMap"}},
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "validateResult": {
+      "type": "object", "required": ["valid", "issues", "requires"],
+      "properties": {
+        "valid": {"type": "boolean"}, "launchable": {"type": "boolean"},
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["code", "path", "message", "fix"],
+            "properties": {"code": {"$ref": "#/$defs/nonBlank"}, "path": {"type": "string"}, "message": {"$ref": "#/$defs/nonBlank"}, "fix": {"$ref": "#/$defs/nonBlank"}},
+            "additionalProperties": false
+          }
+        },
+        "requires": {"$ref": "#/$defs/strings"}
+      },
+      "additionalProperties": false,
+      "if": {"properties": {"valid": {"const": false}}},
+      "then": {"properties": {"launchable": {"const": false}, "issues": {"minItems": 1}}}
+    },
+    "publishParams": {
+      "type": "object", "required": ["document", "baseDefinition", "requestId"],
+      "properties": {
+        "document": {"$ref": "#/$defs/document"},
+        "baseDefinition": {"oneOf": [{"$ref": "#/$defs/nonBlank"}, {"type": "null"}]},
+        "requestId": {"$ref": "#/$defs/nonBlank"}
+      },
+      "additionalProperties": false
+    },
+    "readDefinitionResult": {
+      "type": "object", "required": ["definition", "document"],
+      "properties": {"definition": {"$ref": "#/$defs/nonBlank"}, "document": {"$ref": "#/$defs/document"}},
+      "additionalProperties": false
+    },
+    "startParams": {
+      "type": "object", "required": ["assignmentId", "definition", "bindings", "input", "requestId"],
+      "properties": {
+        "assignmentId": {"$ref": "#/$defs/nonBlank"}, "definition": {"$ref": "#/$defs/nonBlank"},
+        "bindings": {"$ref": "#/$defs/bindings"}, "input": {"$ref": "#/$defs/valueMap"}, "requestId": {"$ref": "#/$defs/nonBlank"}
+      },
+      "additionalProperties": false
+    },
+    "startResult": {
+      "type": "object", "required": ["instanceId", "definition", "startedAtSeq"],
+      "properties": {
+        "instanceId": {"$ref": "#/$defs/nonBlank"}, "definition": {"$ref": "#/$defs/nonBlank"},
+        "startedAtSeq": {"const": 1}, "resourceUsage": {"$ref": "#/$defs/resourceUsageList"}
+      },
+      "additionalProperties": false
+    },
+    "getWorkParams": {
+      "type": "object", "required": ["instanceId"],
+      "properties": {"instanceId": {"$ref": "#/$defs/nonBlank"}, "requestId": {"$ref": "#/$defs/nonBlank"}},
+      "additionalProperties": false
+    },
+    "position": {
+      "oneOf": [
+        {
+          "type": "object", "required": ["state"],
+          "properties": {"state": {"enum": ["ACTIVE", "WAITING_EXTERNAL", "COMPLETED"]}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object", "required": ["state", "phase", "workId", "round"],
+          "properties": {
+            "state": {"const": "ACTIVE"}, "phase": {"enum": ["OPEN", "PENDING"]},
+            "workId": {"$ref": "#/$defs/nonBlank"}, "round": {"$ref": "#/$defs/sequence"}, "attemptId": {"$ref": "#/$defs/nonBlank"}
+          },
+          "additionalProperties": false,
+          "if": {"properties": {"phase": {"const": "PENDING"}}},
+          "then": {"required": ["attemptId"]}, "else": {"not": {"required": ["attemptId"]}}
+        },
+        {
+          "type": "object", "required": ["state", "waitId"],
+          "properties": {"state": {"const": "WAITING_EXTERNAL"}, "waitId": {"$ref": "#/$defs/nonBlank"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object", "required": ["state"],
+          "properties": {"state": {"const": "COMPLETED"}, "finalResultId": {"$ref": "#/$defs/nonBlank"}, "decisionResultId": {"$ref": "#/$defs/nonBlank"}},
+          "additionalProperties": false,
+          "anyOf": [{"required": ["finalResultId"]}, {"required": ["decisionResultId"]}]
+        }
+      ]
+    },
+    "getWorkResult": {
+      "type": "object", "required": ["instanceId", "definition", "viewSeq", "lifecycle", "position", "allowedActions"],
+      "properties": {
+        "instanceId": {"$ref": "#/$defs/nonBlank"}, "definition": {"$ref": "#/$defs/nonBlank"}, "viewSeq": {"$ref": "#/$defs/sequence"},
+        "lifecycle": {"$ref": "#/$defs/nonBlank"}, "position": {"$ref": "#/$defs/position"},
+        "allowedActions": {"type": "array", "maxItems": 1, "items": {"const": "submitResult"}},
+        "work": {"$ref": "#/$defs/work"}, "materials": {"$ref": "#/$defs/materials"},
+        "receipt": {"$ref": "#/$defs/submitReceipt"}, "resourceUsage": {"$ref": "#/$defs/resourceUsageList"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"required": ["work"]},
+          "then": {"properties": {"position": {"required": ["phase"], "properties": {"state": {"const": "ACTIVE"}}}}}
+        },
+        {
+          "if": {"required": ["materials"]},
+          "then": {"anyOf": [{"required": ["work"]}, {"properties": {"position": {"properties": {"state": {"const": "COMPLETED"}}}}}]}
+        },
+        {
+          "if": {"properties": {"allowedActions": {"minItems": 1}}},
+          "then": {"required": ["work"], "properties": {"position": {"properties": {"phase": {"const": "OPEN"}}}}}
+        }
+      ]
+    },
+    "work": {
+      "type": "object", "required": ["activityId", "assignee", "goal", "execution", "inputSchema", "input", "output", "checks"],
+      "properties": {
+        "activityId": {"$ref": "#/$defs/identifier"},
+        "assignee": {
+          "type": "object", "required": ["role", "actor"],
+          "properties": {"role": {"$ref": "#/$defs/identifier"}, "actor": {"$ref": "#/$defs/actorBinding"}},
+          "additionalProperties": false
+        },
+        "goal": {"$ref": "#/$defs/nonBlank"}, "execution": {"$ref": "#/$defs/workExecution"},
+        "inputSchema": {"$ref": "definition.schema.json#/$defs/inputPorts"}, "input": {"$ref": "#/$defs/valueMap"},
+        "output": {"$ref": "definition.schema.json#/$defs/outputShape"},
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["id", "method"],
+            "properties": {"id": {"$ref": "#/$defs/identifier"}, "method": {"$ref": "#/$defs/methodRef"}, "criterion": {"$ref": "#/$defs/nonBlank"}, "provesUse": {"$ref": "#/$defs/fieldPaths"}},
+            "additionalProperties": false
+          }
+        },
+        "rework": {
+          "type": "object", "required": ["base", "edit", "reason"],
+          "properties": {"base": {"$ref": "#/$defs/nonBlank"}, "edit": {"$ref": "#/$defs/fieldPaths", "minItems": 1}, "reason": {"$ref": "#/$defs/nonBlank"}},
+          "additionalProperties": false
+        },
+        "correction": {"$ref": "#/$defs/rejectionDetail", "unevaluatedProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "workExecution": {
+      "oneOf": [
+        {
+          "type": "object", "required": ["kind", "instructions"],
+          "properties": {"kind": {"const": "rule"}, "instructions": {"$ref": "#/$defs/nonBlank"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object", "required": ["kind", "executeWith"],
+          "properties": {
+            "kind": {"const": "method"}, "instructions": {"$ref": "#/$defs/nonBlank"},
+            "executeWith": {
+              "type": "object", "required": ["method", "inputs"],
+              "properties": {"method": {"$ref": "#/$defs/methodRef"}, "inputs": {"$ref": "#/$defs/valueMap"}},
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "materials": {
+      "type": "object", "required": ["results", "facts", "resources"],
+      "properties": {
+        "results": {"$ref": "#/$defs/materialValues"}, "facts": {"$ref": "#/$defs/materialValues"},
+        "resources": {
+          "type": "array", "items": {
+            "type": "object", "required": ["ref", "read"],
+            "properties": {
+              "ref": {"$ref": "#/$defs/ref"},
+              "read": {"oneOf": [
+                {"type": "object", "required": ["kind", "href"], "properties": {"kind": {"const": "link"}, "href": {"$ref": "#/$defs/nonBlank"}}, "additionalProperties": false},
+                {"type": "object", "required": ["kind", "name"], "properties": {"kind": {"const": "capability"}, "name": {"$ref": "#/$defs/nonBlank"}}, "additionalProperties": false}
+              ]}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "materialValues": {"type": "object", "propertyNames": {"$ref": "#/$defs/nonBlank"}, "additionalProperties": {"$ref": "#/$defs/valueMap"}},
+    "submitParams": {
+      "type": "object", "required": ["instanceId", "workId", "round", "expectedViewSeq", "requestId", "output"],
+      "properties": {
+        "instanceId": {"$ref": "#/$defs/nonBlank"}, "workId": {"$ref": "#/$defs/nonBlank"},
+        "round": {"$ref": "#/$defs/sequence"}, "expectedViewSeq": {"$ref": "#/$defs/sequence"}, "requestId": {"$ref": "#/$defs/nonBlank"},
+        "output": {"$ref": "#/$defs/valueMap"}, "methodReceiptRef": {"$ref": "#/$defs/nonBlank"}
+      },
+      "additionalProperties": false
+    },
+    "rejectionDetail": {
+      "type": "object", "required": ["reason", "paths"],
+      "properties": {"reason": {"$ref": "#/$defs/nonBlank"}, "paths": {"$ref": "#/$defs/strings"}}
+    },
+    "submitReceipt": {
+      "type": "object", "required": ["requestId", "attemptId", "outcome"],
+      "properties": {
+        "requestId": {"$ref": "#/$defs/nonBlank"}, "attemptId": {"$ref": "#/$defs/nonBlank"},
+        "outcome": {"oneOf": [
+          {"type": "object", "required": ["kind"], "properties": {"kind": {"const": "pending"}}, "additionalProperties": false},
+          {
+            "type": "object", "required": ["kind", "resultId", "transitionId", "appliedSeq"],
+            "properties": {"kind": {"const": "accepted"}, "resultId": {"$ref": "#/$defs/nonBlank"}, "transitionId": {"$ref": "#/$defs/nonBlank"}, "appliedSeq": {"$ref": "#/$defs/sequence"}},
+            "additionalProperties": false
+          },
+          {"$ref": "#/$defs/rejectionDetail", "type": "object", "required": ["kind"], "properties": {"kind": {"const": "rejected"}}, "unevaluatedProperties": false},
+          {"type": "object", "required": ["kind", "reason"], "properties": {"kind": {"const": "invalidated"}, "reason": {"$ref": "#/$defs/nonBlank"}}, "additionalProperties": false}
+        ]}
+      },
+      "additionalProperties": false
+    },
+    "signalParams": {
+      "type": "object", "required": ["waitId", "eventId", "subject", "fact"],
+      "properties": {
+        "waitId": {"$ref": "#/$defs/nonBlank"}, "eventId": {"$ref": "#/$defs/nonBlank"},
+        "subject": {"oneOf": [{"$ref": "#/$defs/nonBlank"}, {"$ref": "#/$defs/ref"}]},
+        "fact": {"oneOf": [
+          {"$ref": "#/$defs/valueMap", "not": {"required": ["$ref"]}},
+          {"type": "object", "required": ["$ref"], "properties": {"$ref": {"$ref": "#/$defs/ref"}}, "additionalProperties": false}
+        ]},
+        "externalRequestId": {"$ref": "#/$defs/nonBlank"}, "sourceVersion": {"$ref": "#/$defs/version"}, "cursor": {"$ref": "#/$defs/version"}
+      },
+      "additionalProperties": false
+    },
+    "signalReceipt": {
+      "type": "object", "required": ["waitId", "eventId", "outcome"],
+      "properties": {
+        "waitId": {"$ref": "#/$defs/nonBlank"}, "eventId": {"$ref": "#/$defs/nonBlank"},
+        "outcome": {"oneOf": [
+          {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["pending", "already_resumed"]}}, "additionalProperties": false},
+          {"type": "object", "required": ["kind", "transitionId"], "properties": {"kind": {"const": "resumed"}, "transitionId": {"$ref": "#/$defs/nonBlank"}}, "additionalProperties": false},
+          {"type": "object", "required": ["kind", "reason"], "properties": {"kind": {"const": "not_matched"}, "reason": {"enum": ["condition", "stale", "invalidated"]}}, "additionalProperties": false}
+        ]}
+      },
+      "additionalProperties": false
+    },
+    "resourceUsageParams": {
+      "type": "object", "properties": {"ref": {"$ref": "#/$defs/ref"}, "resourceKey": {"$ref": "#/$defs/nonBlank"}},
+      "oneOf": [{"required": ["ref"]}, {"required": ["resourceKey"]}], "additionalProperties": false
+    },
+    "resourceUsageList": {"type": "array", "items": {"$ref": "#/$defs/resourceUsage"}},
+    "resourceUsage": {
+      "type": "object", "required": ["resourceKey", "uses", "alerts"],
+      "properties": {
+        "resourceKey": {"$ref": "#/$defs/nonBlank", "description": "Opaque identifier for the original resource, resolved by the content service.\n\n由内容服务解析的原件不透明标识。"},
+        "uses": {
+          "type": "array", "items": {
+            "type": "object", "required": ["mode", "stage"],
+            "properties": {
+              "mode": {"$ref": "definition.schema.json#/$defs/resourceMode"}, "stage": {"enum": ["planned", "current"]},
+              "version": {"$ref": "#/$defs/version"}, "instanceId": {"$ref": "#/$defs/nonBlank"}, "activityId": {"$ref": "#/$defs/identifier"},
+              "workId": {"$ref": "#/$defs/nonBlank"}, "waitId": {"$ref": "#/$defs/nonBlank"},
+              "taskLabel": {"$ref": "#/$defs/nonBlank"}, "actorLabel": {"$ref": "#/$defs/nonBlank"},
+              "editing": {"type": "boolean"}, "reconciling": {"type": "boolean"}
+            },
+            "additionalProperties": false,
+            "not": {"required": ["workId", "waitId"]}
+          }
+        },
+        "alerts": {"type": "array", "uniqueItems": true, "items": {"enum": ["plannedOverlap", "liveChanges", "sharedWrite"]}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

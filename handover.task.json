@@ -1,0 +1,93 @@
+{
+  "protocolVersion": "1.0",
+  "taskId": "duty-handover",
+  "goal": "值班交接完成后，保留由记录人根据交接说明撰写、并由另一位接班人确认接收的那一版摘要。",
+  "roles": [
+    "记录人",
+    "接班人"
+  ],
+  "start": {
+    "input": {
+      "交接说明": "text"
+    },
+    "activity": "整理摘要",
+    "with": {
+      "交接说明": "start.交接说明"
+    }
+  },
+  "activities": {
+    "整理摘要": {
+      "assignee": "记录人",
+      "goal": "将本次交接说明概括成一段可供接班人使用的摘要。",
+      "execution": {
+        "kind": "rule",
+        "instructions": "阅读交接说明，用一段文字提交摘要。收到退回理由时，在被退回的那版摘要上修订。"
+      },
+      "input": {
+        "交接说明": "text"
+      },
+      "output": {
+        "摘要": "text"
+      },
+      "routes": [
+        {
+          "default": {
+            "next": "办理接收",
+            "with": {
+              "待接收成果": "result",
+              "交接说明": "in.交接说明"
+            }
+          }
+        }
+      ]
+    },
+    "办理接收": {
+      "assignee": "接班人",
+      "goal": "对照交接说明，决定是否接收本轮摘要。",
+      "execution": {
+        "kind": "rule",
+        "instructions": "本步由与记录人不同的接班人执行。核对交接说明和送达的摘要，内容可以接收时确认接收，需要记录人修改时说明具体理由。"
+      },
+      "input": {
+        "交接说明": "text",
+        "待接收成果": "resultId"
+      },
+      "output": {
+        "variants": {
+          "接收": {},
+          "退回": {
+            "理由": "text"
+          }
+        }
+      },
+      "routes": [
+        {
+          "when": [
+            "out.kind",
+            "eq",
+            "接收"
+          ],
+          "exit": {
+            "end": "in.待接收成果"
+          }
+        },
+        {
+          "default": {
+            "return": "整理摘要",
+            "base": "in.待接收成果",
+            "edit": [
+              "摘要"
+            ],
+            "reason": "out.理由"
+          }
+        }
+      ]
+    }
+  },
+  "distinctRoles": [
+    [
+      "记录人",
+      "接班人"
+    ]
+  ]
+}

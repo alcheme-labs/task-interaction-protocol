@@ -1,0 +1,44 @@
+{
+  "protocolVersion": "1.0",
+  "taskId": "review-note",
+  "goal": "根据给定说明交付一段获复核通过的结论。",
+  "roles": ["writer", "reviewer"],
+  "sources": ["confirmation"],
+  "start": {
+    "input": {"brief": "text", "caseKey": "text"},
+    "activity": "draft",
+    "with": {"brief": "start.brief", "caseKey": "start.caseKey"}
+  },
+  "activities": {
+    "draft": {
+      "assignee": "writer",
+      "goal": "依照说明交一段结论，并标明是否需要外部确认。",
+      "execution": {"kind": "rule"},
+      "input": {"brief": "text", "caseKey": "text"},
+      "output": {"summary": "text", "confirm": "bool"},
+      "routes": [
+        {"when": ["out.confirm", "eq", true], "exit": {"wait": "confirmation"}},
+        {"default": {"next": "review", "with": {"item": "result"}}}
+      ]
+    },
+    "review": {
+      "assignee": "reviewer",
+      "goal": "核对本轮结论，决定采纳或指出要修订的内容。",
+      "execution": {"kind": "rule"},
+      "input": {"item": "resultId", "evidence?": "factId"},
+      "output": {"variants": {"revise": {"reason": "text"}, "approve": {}}},
+      "routes": [
+        {"when": ["out.kind", "eq", "revise"], "exit": {"return": "draft", "base": "in.item", "edit": ["summary", "confirm"], "reason": "out.reason"}},
+        {"default": {"end": "in.item"}}
+      ]
+    }
+  },
+  "waits": {
+    "confirmation": {
+      "mode": "observe", "semantics": "state", "source": "confirmation",
+      "subject": "in.caseKey", "fact": {"ready": "bool"},
+      "when": ["fact.ready", "eq", true],
+      "resume": {"next": "review", "with": {"item": "result", "evidence": "factId"}}
+    }
+  }
+}

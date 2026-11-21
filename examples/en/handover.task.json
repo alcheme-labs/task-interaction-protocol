@@ -1,0 +1,93 @@
+{
+  "protocolVersion": "1.0",
+  "taskId": "duty-handover-en",
+  "goal": "At shift handover, retain the version of the summary that the recorder wrote from the handover notes and a different incoming operator acknowledged.",
+  "roles": [
+    "recorder",
+    "incomingOperator"
+  ],
+  "start": {
+    "input": {
+      "notes": "text"
+    },
+    "activity": "writeSummary",
+    "with": {
+      "notes": "start.notes"
+    }
+  },
+  "activities": {
+    "writeSummary": {
+      "assignee": "recorder",
+      "goal": "Summarize the handover notes in one paragraph for the incoming operator.",
+      "execution": {
+        "kind": "rule",
+        "instructions": "Read the handover notes and submit a one-paragraph summary. If it is returned, revise that version using the stated reason."
+      },
+      "input": {
+        "notes": "text"
+      },
+      "output": {
+        "summary": "text"
+      },
+      "routes": [
+        {
+          "default": {
+            "next": "reviewHandover",
+            "with": {
+              "item": "result",
+              "notes": "in.notes"
+            }
+          }
+        }
+      ]
+    },
+    "reviewHandover": {
+      "assignee": "incomingOperator",
+      "goal": "Compare the summary with the notes and decide whether to accept it.",
+      "execution": {
+        "kind": "rule",
+        "instructions": "An incoming operator distinct from the recorder reviews the notes and submitted summary. Acknowledge an acceptable summary or give the recorder a specific reason for revision."
+      },
+      "input": {
+        "notes": "text",
+        "item": "resultId"
+      },
+      "output": {
+        "variants": {
+          "acknowledge": {},
+          "revise": {
+            "reason": "text"
+          }
+        }
+      },
+      "routes": [
+        {
+          "when": [
+            "out.kind",
+            "eq",
+            "acknowledge"
+          ],
+          "exit": {
+            "end": "in.item"
+          }
+        },
+        {
+          "default": {
+            "return": "writeSummary",
+            "base": "in.item",
+            "edit": [
+              "summary"
+            ],
+            "reason": "out.reason"
+          }
+        }
+      ]
+    }
+  },
+  "distinctRoles": [
+    [
+      "recorder",
+      "incomingOperator"
+    ]
+  ]
+}

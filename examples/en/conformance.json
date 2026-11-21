@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "name": "direct-and-replay",
+      "start": {"bindings":{"writer":"P1","reviewer":"P2"},"input":{"brief":"Say whether the two rounds agree and explain why.","caseKey":"C-7"},"sources":{"confirmation":"S1"}},
+      "events": [
+        {"op":"submit","actor":"P1","key":"s0","output":{"summary":"Missing the confirmation flag"}},
+        {"op":"submit","actor":"P1","key":"s1","output":{"summary":"The two rounds agree.","confirm":false}},
+        {"op":"submit","actor":"P1","key":"s1","output":{"summary":"The two rounds agree.","confirm":false}},
+        {"op":"submit","actor":"P2","key":"s2","output":{"kind":"approve"}}
+      ],
+      "expect": ["OPEN:draft:1","OPEN:draft:1","OPEN:review:1","OPEN:review:1","DONE"],
+      "outcomes": ["rejected","accepted","accepted","accepted"],
+      "final": {"summary":"The two rounds agree.","confirm":false}
+    },
+    {
+      "name": "wait-then-return",
+      "start": {"bindings":{"writer":"P1","reviewer":"P2"},"input":{"brief":"Say whether the two rounds agree and explain why.","caseKey":"C-7"},"sources":{"confirmation":"S1"}},
+      "events": [
+        {"op":"submit","actor":"P1","key":"s1","output":{"summary":"The first draft needs verification.","confirm":true}},
+        {"op":"signal","source":"unknown","key":"e0","subject":"C-7","version":1,"fact":{"ready":true}},
+        {"op":"signal","source":"S1","key":"e1","subject":"C-7","version":3,"fact":{"ready":false}},
+        {"op":"signal","source":"S1","key":"e2","subject":"C-7","version":2,"fact":{"ready":true}},
+        {"op":"signal","source":"S1","key":"e3","subject":"other","version":4,"fact":{"ready":true}},
+        {"op":"signal","source":"S1","key":"e4","subject":"C-7","version":4,"fact":{"ready":true}},
+        {"op":"signal","source":"S1","key":"e4","subject":"C-7","version":4,"fact":{"ready":true},"wait":"confirmation","round":1},
+        {"op":"submit","actor":"P2","key":"s2","output":{"kind":"revise","reason":"Keep the original conclusion and clear the external confirmation flag."}},
+        {"op":"submit","actor":"P1","key":"stale","output":{"summary":"Submitted one round late","confirm":false},"activity":"draft","round":1},
+        {"op":"submit","actor":"P1","key":"s3","output":{"confirm":false}},
+        {"op":"submit","actor":"P2","key":"s4","output":{"kind":"approve"}}
+      ],
+      "expect": ["OPEN:draft:1","WAIT:confirmation","WAIT:confirmation","WAIT:confirmation","WAIT:confirmation","WAIT:confirmation","OPEN:review:1","OPEN:review:1","OPEN:draft:2","OPEN:draft:2","OPEN:review:2","DONE"],
+      "outcomes": ["accepted","NOT_VISIBLE","not_matched(condition)","not_matched(stale)","NOT_VISIBLE","resumed","resumed","accepted","STALE_WORK","accepted","accepted"],
+      "final": {"summary":"The first draft needs verification.","confirm":false}
+    },
+    {
+      "name": "reopen-same-wait",
+      "start": {"bindings":{"writer":"P1","reviewer":"P2"},"input":{"brief":"Say whether the two rounds agree and explain why.","caseKey":"C-7"},"sources":{"confirmation":"S1"}},
+      "events": [
+        {"op":"submit","actor":"P1","key":"s1","output":{"summary":"The first draft needs verification.","confirm":true}},
+        {"op":"signal","source":"S1","key":"e1","subject":"C-7","version":1,"fact":{"ready":true}},
+        {"op":"submit","actor":"P2","key":"s2","output":{"kind":"revise","reason":"Revise the conclusion and confirm it again."}},
+        {"op":"submit","actor":"P1","key":"s3","output":{"summary":"The second draft has been verified."}},
+        {"op":"signal","source":"S1","key":"e-late","subject":"C-7","version":2,"fact":{"ready":true},"wait":"confirmation","round":1},
+        {"op":"signal","source":"S1","key":"e2","subject":"C-7","version":1,"fact":{"ready":true},"wait":"confirmation","round":2},
+        {"op":"submit","actor":"P2","key":"s4","output":{"kind":"approve"}}
+      ],
+      "expect": ["OPEN:draft:1","WAIT:confirmation","OPEN:review:1","OPEN:draft:2","WAIT:confirmation","WAIT:confirmation","OPEN:review:2","DONE"],
+      "outcomes": ["accepted","resumed","accepted","accepted","already_resumed","resumed","accepted"],
+      "final": {"summary":"The second draft has been verified.","confirm":true}
+    }
+  ]
+}
